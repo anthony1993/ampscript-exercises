@@ -1,0 +1,28 @@
+%%[ 
+Var @msg
+Var @response
+var @logId
+
+set @logId = GUID()
+set @response = Uppercase([MSG(0).NOUN(0)])
+
+InsertData("Logging", "logId", @logId, "logText", @response)
+
+if (@response != "N" AND @response != "Y" AND @response != "YES" AND @response != "NO") then
+   set @msg = "You must specify y (yes) or n (no)."
+   InsertData("Logging", "logId" , @logId, "logText", "Invalid inbound noun")
+   SetSmsConversationNextKeyword("59545", MOBILE_NUMBER, "EXEC_TRNSFR")
+else 
+
+   if (@response == "Y" or @response == "YES") then  
+      InsertData("Logging", "logId", @logId, "logText", "Found yes")
+      Set @msg = "Please specify the dollar amount you wish to transfer (eg. 500.00, 1000.12, 1.00)."
+      SetSmsConversationNextKeyword("59545", MOBILE_NUMBER, "TRNSFR_YES")
+   else
+      InsertData("Logging", "logId", @logId, "logText", "Found no")   
+      Set @msg = "You will not receive any further notifications today about this balance."
+      SetSmsConversationNextKeyword("59545", MOBILE_NUMBER, "NONE")
+   endif 
+endif
+OutputLine(v(@msg))
+]%%  
