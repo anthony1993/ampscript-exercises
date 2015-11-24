@@ -1,0 +1,56 @@
+%%[
+var @msg
+var @response 
+var @logId
+
+set @logId = GUID()
+set @transferAmount = [MSG(0).NOUN(0)]
+
+/* check to see if these volume of funds is available in their account
+if not, send a message back to call customer service
+if yes, transfer the funds, then send back a confirmation message 
+*/
+
+InsertData("Logging", "logId", @logId, "logText", Concat("Check savings account for required funds to transfer: ", v(@transferAmount)))   
+
+var @savingsBalance
+Set @accountRows = LookupOrderedRows("UserAccounts", 1,"phoneNumber Desc","phoneNumber", MOBILE_NUMBER)
+   
+InsertData("Logging", "logId", @logId, "logText", Concat("Found row based on phone number: ", v(RowCount(@accountRows))))   
+
+var @checkingBalance
+
+if (rowcount(@accountRows) > 0) then 
+   set @accountRow = Row(@accountRows, 1)
+   InsertData("Logging", "logId", @logId, "logText", "Found an account")  
+
+   set @savingsBalance = Field(@accountRow, "savingsBalance", 0) 
+   set @checkingBalance = Field(@accountRow, "checkingBalance", 0) 
+   
+   InsertData("Logging", "logId", @logId, "logText", "Columns retrieved")   
+
+   if (@savingsBalance >= @transferAmount) then 
+
+      var @newCheckingBalance
+      var @newSavingsBalance
+
+      InsertData("Logging", "logId", @logId, "logText", Concat("Checking balance: ", v(@checkingBalance), " Savings balance: ", v(@savingsBalance))) 
+
+      /* add the funds to the checking account & decrement the savings account */
+      set @newCheckingBalance = Add(@checkingBalance, @transferAmount)
+      set @newSavingsBalance = Subtract(@savingsBalance, @transferAmount)
+
+      InsertData("Logging", "logId", @logId, "logText", Concat("Attempting to update UserAccounts table with new balances - Savings: ", v(@newSavingsBalance), "  Checking: ", v(@newCheckingBalance))) 
+
+      UpdateData("UserAccounts", 1, "phoneNumber", MOBILE_NUMBER, "savingsBalance", @newSavingsBalance, "checkingBalance", @newCheckingBalance)
+      OutputLine(v(Concat("Successfully transfered ", @transferAmount, " from savings to checking.")))
+   else
+      InsertData("Logging", "logId", @logId, "logText", "Insufficient funds")      
+      OutputLine("Insufficent funds to perform this request. Please contact Customer Care 1-888-...")
+   endif
+
+else 
+   InsertData("Logging", "logId", @logId, "logText", "No account matches")   
+   OutputLine("No account matching this phone number found. Please contact Customer Care 1-888-...")
+endif
+]%%
