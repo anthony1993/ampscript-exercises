@@ -1,0 +1,19 @@
+%%[
+var @phoneNumber
+
+set @phoneNumber = MOBILE_NUMBER
+
+Set @accountRows = LookupOrderedRows("UserAccounts", 1,"phoneNumber Desc","phoneNumber", MOBILE_NUMBER)
+
+if (rowcount(@accountRows) > 0) then 
+   Set @accountRow = Row(@accountRows, 1)
+
+   set @savingsBalance = Field(@accountRow, "savingsBalance", 0) 
+   set @checkingBalance = Field(@accountRow, "checkingBalance", 0) 
+
+   OutputLine(v(Concat("Current checking Balance: ", FormatCurrency(@checkingBalance, "en-US"), ", current savings balance: ", FormatCurrency(@savingsBalance, "en-US"))))   
+else 
+   OutputLine("No account found matching this number. Please contact Customer Care 1-888-...")
+endif
+
+]%%
