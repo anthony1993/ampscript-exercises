@@ -1,0 +1,28 @@
+%%[
+
+/* Check to see if this user has already received a code today*/ 
+Set @isRedeemed = LookupOrderedRows("RewardsCode Redemptions", 1, "dateRedeemed DESC", "dateRedeemed", Format(Now(),"MM/dd/yyyy"), "phoneNumber", MOBILE_NUMBER);
+
+if RowCount(@isRedeemed) == 0 then 
+	Set @row = LookupOrderedRows("Rewards Table", 1, "DateAdded DESC", "Redeemed", "FALSE");
+
+	/* Record found, get the code and update the data extension */
+	if RowCount(@row) >= 1 then
+		/* Get the rewards code, then update the DE to mark this code is redeemed */
+		Set @rewardsCode = Field(ROW(@row, 1),"RewardsCode");
+		Set @updateCount = UpdateData("Rewards Table", 1, "RewardsCode", @rewardsCode, "Redeemed", "TRUE");
+
+		OutputLine(Concat("Your rewards code for today is: ", @rewardsCode));
+		/* Add the sent rewards code and the user info to the RewardsCode Redemptions table */
+		Set @rowsInserted = InsertData("RewardsCode Redemptions", "dateRedeemed", Format(Now(),"MM/dd/yyyy"), "phoneNumber", MOBILE_NUMBER, "rewardsCode", @rewardsCode);
+	else 
+		Set @noValues = "No more rewards codes available, please try again tomorrow";
+		OutputLine(v(@noValues));
+	endif
+else 
+	/* Get the previously redeemed code from the row */
+	Set @rewardsCode = Field(ROW(@isRedeemed, 1), "RewardsCode");	
+	Outputline(Concat(Concat("You have already redeemed rewards code: ", @rewardsCode), " today. Please try again tomorrow."));
+endif 
+
+]%%
