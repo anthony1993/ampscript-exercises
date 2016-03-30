@@ -1,0 +1,22 @@
+%%[
+var @message
+
+set @message = "Apologies, your appointment could not be found. Please contact Customer Care @ 1-888-..."
+
+// use this number to do a lookup in your appt DE
+set @apptRows = LookupOrderedRows("Appointments", 1, "appointmentDate desc", "phoneNumber", MOBILE_NUMBER);
+
+// use the values form this DE to write your message back to the subscriber
+if (rowcount(@apptRows) > 0) then
+   set @appt = row(@apptRows,1)
+  
+   set @facility = Field(@appt, "facility", 0) 
+   set @doctor = Field(@appt, "doctor", 0)
+   set @apptDate = Field(@appt, "appointmentDate", 0)
+   
+   set @message = Concat("Were you satisfied with your visit on ", @apptDate, " with ", @doctor, " at ", @facility, "? Please respond Y or N")
+
+endif
+
+outputline(v(@message))
+]%%
