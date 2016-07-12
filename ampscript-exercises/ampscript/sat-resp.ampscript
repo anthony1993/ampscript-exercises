@@ -1,0 +1,22 @@
+%%[
+
+set @response = Uppercase([MSG(0).NOUN(0)])
+var @cleanResponse
+set @cleanResponse = "undefined"
+
+if (@response == "Y" or @response == "YES" or @response == "YEAH") then 
+   set @cleanResponse = "true"
+elseif (@response == "N" or @response == "NO" or @response == "NAH") then
+   set @cleanResponse = "false"
+endif
+
+if (@cleanResponse == "undefined") then
+   set @err = "Your response was not understood. Please text 'y' or 'n'." 
+   OutputLine(v(@err))
+else
+   InsertData("SubscriberResponses", "phoneNumber", MOBILE_NUMBER, "response", @cleanResponse, "sendDate", NOW()) 
+   set @msg = "Thanks for responding!"
+   OutputLine(v(@msg))
+endif
+
+]%%
