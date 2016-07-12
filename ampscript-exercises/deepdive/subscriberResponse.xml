@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:a="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:u="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+   <s:Header>
+      <a:Action s:mustUnderstand="1">Create</a:Action>
+      <a:MessageID>urn:uuid:7e0cca04-57bd-4481-864c-6ea8039d2ea0</a:MessageID>
+      <a:ReplyTo>
+         <a:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</a:Address>
+      </a:ReplyTo>
+      <a:To s:mustUnderstand="1">{{soapEndPoint}}</a:To>
+      <fueloauth xmlns="http://exacttarget.com">{{accessToken}}</fueloauth>
+   </s:Header>
+	<s:Body xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+		<CreateRequest xmlns="http://exacttarget.com/wsdl/partnerAPI">
+        <!--
+            <Options>
+             <SendResponseTo>
+      		<ResponseType>email</ResponseType>
+      		<ResponseAddress>your_address@salesforce.com</ResponseAddress>
+      		<RespondWhen>OnCallComplete</RespondWhen>
+      		<IncludeResults>true</IncludeResults>
+      		<IncludeObjects>true</IncludeObjects>
+  		   </SendResponseTo>
+             <RequestType>Asynchronous</RequestType>
+      	    </Options>
+      	-->
+         <Objects xsi:type="DataExtension">
+            <!--
+            <Client>
+                <ID>10798224</ID>
+            </Client>
+            -->
+            <CustomerKey>subResponses_custKey</CustomerKey>
+            <Name>SubscriberResponses</Name>
+            <!-- Specify folder DE created in
+            <CategoryID>432655</CategoryID>
+            -->
+            <IsSendable>false</IsSendable>
+            <Fields>
+                <Field>
+                    <CustomerKey>phoneNumber</CustomerKey>
+                    <Name>phoneNumber</Name>
+                    <DataType>Phone</DataType>
+                    <IsNillable>true</IsNillable>
+                    <IsPrimaryKey>false</IsPrimaryKey>
+                    <FieldType>Phone</FieldType>
+                    <MaxLength>50</MaxLength>
+                </Field>                  
+                <Field>
+                    <CustomerKey>sendDate</CustomerKey>
+                    <Name>sendDate</Name>
+                    <FieldType>Date</FieldType>
+                    <IsRequired>false</IsRequired>
+                    <IsPrimaryKey>false</IsPrimaryKey>
+                </Field>
+                  <Field>
+                    <CustomerKey>response</CustomerKey>
+                    <Name>response</Name>
+                    <DataType>Boolean</DataType>
+                    <IsNillable>true</IsNillable>
+                    <IsPrimaryKey>false</IsPrimaryKey>
+                </Field> 
+            </Fields>
+         </Objects>
+		</CreateRequest>
+	</s:Body>
+</s:Envelope>
