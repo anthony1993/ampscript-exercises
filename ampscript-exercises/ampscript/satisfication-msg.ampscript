@@ -1,20 +1,49 @@
-%%[
-var @message
+%%[ 
+/*
+The tricky thing when calling SF and looking up a user by phone number is that the number that is entered into
+SF is stored as it is keyed in, but its always represented the same way in the UI. This can be confusing 
+if you get 0 records returned
+*/
+var @mySfContactId
 
-set @message = "Apologies, your appointment could not be found. Please contact Customer Care @ 1-888-..."
+set @smsNumber = MOBILE_NUMBER
+set @msg = Concat("No appointment record could be found for this mobile number: ", @smsNumber)   
 
-set @apptRows = LookupOrderedRows("Appointments", 1, "appointmentDate desc", "phoneNumber", MOBILE_NUMBER);
+/* You can use this code if you enter in your number as (555)555-1212
+set @areaCode = substring(@smsNumber, 2, 3)
+set @prefix = substring(@smsNumber, 5, 3)
+set @lineNumber = substring(@smsNumber, 8, 4)
+set @mobileNumber = Concat("(", @areaCode, ")", " ", @prefix, "-", @lineNumber)
+*/
 
-if (rowcount(@apptRows) > 0) then
-   set @appt = row(@apptRows,1)
-  
-   set @facility = Field(@appt, "facility", 0) 
-   set @doctor = Field(@appt, "doctor", 0)
-   set @apptDate = Field(@appt, "appointmentDate", 0)
-   
-   set @message = Concat("Were you satisfied with your visit on ", @apptDate, " with ", @doctor, " at ", @facility, "? Please respond Y or N")
+var @rs
+set @rs = RetrieveSalesforceObjects('Contact', 'Id,MobilePhone', 'MobilePhone', '=', @smsNumber)
+/* DEBUG: set @rs = RetrieveSalesforceObjects('Contact', 'Id,MobilePhone,Phone', 'Id', '=', @mySfContactID) */
 
+/* Didn't find a number under MobilePhone, look for a value under Phone */
+if(rowcount(@rs) == 0) then
+   set @rs = RetrieveSalesforceObjects('Contact', 'Id,MobilePhone,Phone', 'Phone', '=', @smsNumber)
 endif
 
-outputline(v(@message))
+/* At this point we have a result set from either MobilePhone or Phone, check for records */
+if(rowcount(@rs) > 0) then 
+   set @sfContact = row(@rs,1)
+   
+   /* This is the ID we need to use to lookup from a DE */
+   set @sfID = Field(@sfContact, 'Id', 0)   
+   
+   /* Use the id to lookup the appointment. The user may have more than 1 appt, we'll just grab the most recent */
+   set @sfRows = LookupOrderedRows('ENT.MHAppointment__c_Salesforce',1,'Appointment_Date__c DESC', 'ContactID__c', @sfID)
+
+   if(rowcount(@sfRows) > 0) then
+        set @apptRow = row(@sfRows, 1)
+      set @facility = Field(@apptRow, 'Facility__c');
+      set @doctor = Field(@apptRow, 'Doctor__c');
+      set @appointmentDate = Field(@apptRow, 'Appointment_Date__c');
+      set @msg = Concat('Were you satisfied with your visit with ', @doctor, ' on ', @appointmentDate, ' at ', @facility, '? Reply Y/N');
+   endif
+endif 
+
+OutputLine(v(@msg));
+
 ]%%
